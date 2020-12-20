@@ -69,6 +69,12 @@ class AdaForest:
                 res -= stump.say
         return res >= 0
 
+    def predict_all(self, xs):
+        res = []
+        for x in xs:
+            res.append(self.predict(x))
+        return res
+
 
 def draw_plot(xs, ys, title, xlabel, ylabel):
     plt.plot(xs, ys)
@@ -92,40 +98,70 @@ def draw_plot(xs, ys, title, xlabel, ylabel):
 #             accuracy.append(accuracy_score(data[1], predicted_ys))
 #         draw_plot([i for i in range(1, 70)], accuracy, f'{data[2]}, max_depth={max_depth}', 'amount of steps', 'accuracy')
 
-
-def draw_classification_plot(x, y, title, stumps: list, launches=2, ncols=graph_width, h=.05):
-    X0, X1 = x[:, 0], x[:, 1]
-    x_min, x_max = X0.min() - 0.5, X0.max() + 0.5
-    y_min, y_max = X1.min() - 0.5, X1.max() + 0.5
-    xx, yy = np.meshgrid(np.arange(x_min, x_max, h), np.arange(y_min, y_max, h))
-
-    ax = plt.plot(launches, ncols)
-    ax.title.set_text(title)
-
-    z = [[predict(stumps, np.array([i, j])) for i, j in zip(ii, jj)] for ii, jj in zip(xx, yy)]
-    out = ax.contourf(xx, yy, np.array(z), cmap=plt.cm.coolwarm, alpha=0.8)
-
-    ax.scatter(X0, X1, c=y, cmap=plt.cm.coolwarm, s=20, edgecolors='k')
-    ax.set_xlim(xx.min(), xx.max())
-    ax.set_ylim(yy.min(), yy.max())
-    ax.set_xlabel('x')
-    ax.set_ylabel('y')
-    ax.set_xticks(())
-    ax.set_yticks(())
-    plt.grid(True)
+import numpy as np
 
 
-graph_index = 0
+def draw_classification_plot(xs, ys, steps, max_depth, title):
+    x_axis = [x[0] for x in xs]
+    y_axis = [x[1] for x in xs]
+
+    min_x = min(x_axis) - 0.1
+    max_x = max(x_axis) + 0.1
+
+    min_y = min(y_axis) - 0.1
+    max_y = max(y_axis) + 0.1
+
+    plt.title(title)
+    plt.xlim(min_x, max_x)
+    plt.ylim(min_y, max_y)
+
+    x_true = []
+    y_true = []
+    x_false = []
+    y_false = []
+
+    s = 0.025
+    mesh = np.meshgrid(np.arange(min_x, max_x, s), np.arange(min_y, max_y, s))
+    all_points = np.array(mesh).T.reshape(-1, 2)
+
+    forest = AdaForest(steps, xs, ys, max_depth)
+    predicted = forest.predict_all(all_points)
+
+    p_x_true = []
+    p_y_true = []
+    p_x_false = []
+    p_y_false = []
+
+    for i in range(len(x_axis)):
+        if ys[i] is True:
+            x_true.append(x_axis[i])
+            y_true.append(y_axis[i])
+        else:
+            x_false.append(x_axis[i])
+            y_false.append(y_axis[i])
+
+    for i in range(len(all_points)):
+        if predicted[i] is True:
+            p_x_true.append(all_points[i][0])
+            p_y_true.append(all_points[i][1])
+        else:
+            p_x_false.append(all_points[i][0])
+            p_y_false.append(all_points[i][1])
+
+    plt.scatter(p_x_true, p_y_true, marker='.', color='#90EE90', s=50)
+    plt.scatter(p_x_false, p_y_false, marker='.', color='#FFC0CB', s=50)
+    plt.scatter(x_true, y_true, marker='+', color='blue', s=50)
+    plt.scatter(x_false, y_false, marker='_', color='red', s=50)
+    plt.show()
+
 
 amount_of_steps = [1, 2, 3, 5, 8, 13, 21, 34, 55]
-
-for i in range(len(datasets)):
-    for d in range(len(depths)):
-        for j in amount_of_steps:
-            name, (xs, ys) = datasets[i]
-            draw_classification_plot(xs,
-                                     ys,
-                                     f"{name}: {depths[d]} depth, {j} stumps",
-                                     stumpList[d * len(datasets) + i][:j],
-                                     len(datasets) * len(depths),
-                                     ncols=len(amount_of_steps))
+dataset = [(chips_xs, chips_ys, 'chips'), (geyser_xs, geyser_ys, 'geyser')]
+for data in dataset:
+    for max_depth in range(1, 5):
+        for steps in amount_of_steps:
+            draw_classification_plot(data[0],
+                                     data[1],
+                                     steps,
+                                     max_depth,
+                                     f"{data[2]}: max_depth={max_depth}, steps={steps}")
