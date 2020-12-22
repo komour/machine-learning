@@ -154,7 +154,7 @@ def KNN_leave_one_out():
     return f_measure(3, confusion_matrix)
 
 
-input_data = pd.read_csv("resources/dataset_wine.csv")
+input_data = pd.read_csv("resources/KNN/dataset_wine.csv")
 X_init = input_data[input_data.columns[1:]].to_numpy()
 Y_init = input_data[input_data.columns[:1]].to_numpy()
 D = len(X_init)
