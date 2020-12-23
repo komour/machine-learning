@@ -206,3 +206,46 @@ def f_measure(k, matrix):
     micro = micro_sum / amount
 
     return macro
+
+
+def intercluster_distance(xs1, xs2):
+    """
+        xs1 -- points from the 1st cluster
+        xs2 -- points from the 2nd cluster
+    """
+    min_dist = 4
+    for x1 in xs1:
+        for x2 in xs2:
+            min_dist = min(min_dist, dist(x1, x2))
+
+
+def cluster_diameter(xs):
+    """
+        xs -- points from the cluster
+    """
+    max_dist = -1
+    for x1 in xs:
+        for x2 in xs:
+            max_dist = max(max_dist, dist(x1, x2))
+
+
+def dunn_core(points_per_cluster):
+    denominator = -1
+    for xs in points_per_cluster:
+        denominator = max(denominator, cluster_diameter(xs))
+    numerator = 4
+    for i in range(len(points_per_cluster)):
+        ck = points_per_cluster[i]
+        for j in range(len(points_per_cluster)):
+            if j == i:
+                continue
+            cl = points_per_cluster[j]
+            numerator = min(numerator, intercluster_distance(cl, ck))
+    return numerator / denominator
+
+
+def dunn(xs, tags, k):
+    points_per_cluster = []
+    for i in range(k):
+        points_per_cluster.append(get_points_from_clust(xs, tags, i))
+    return dunn_core(points_per_cluster)
