@@ -1,5 +1,10 @@
 import numpy as np
+import random
 
-g1 = np.array([[0, 0, 1], [0, 1, 0]])
-g2 = np.array([[1, 1, 1, 0], [0, 0, 1, 1], [1, 0, 0, 0]])
-print(np.kron(g1, g2))
+kek = [[1, 2], [3, 4]]
+
+kuk = kek[0]
+
+kuk[0] = 9
+
+print(kek)
